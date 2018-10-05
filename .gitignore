@@ -1,0 +1,10 @@
+/build/
+bootloader/fat16
+images/disk.vdi
+images/disk.img
+images/usb-fat16-drive.img.bak2
+images/usb-fat16-drive.img
+docs/.~lock.reference.odt#
+.cproject
+.project
+.directory
