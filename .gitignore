@@ -8,3 +8,6 @@ docs/.~lock.reference.odt#
 .cproject
 .project
 .directory
+*.oc
+*.oa
+*.o

@@ -24,7 +24,7 @@ all: kernel.o
 
 kernel.o: $(C_OBJECTS) $(ASM_OBJECTS)
 	 $(LD) -o $@ $^ $(LD_FLAGS)
-	 cp $@ $@.bak
+#	 cp $@ $@.bak
 	 strip -s $@
 	 objcopy -O binary $@ $@
 	 
