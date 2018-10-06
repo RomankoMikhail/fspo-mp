@@ -9,13 +9,14 @@ Here list of tools:
  - HxD Hex editor;
  - ImDisk Toolkit (for disk image mounting and editing);
  - Nasm;
+ - git client
  - Visual Studio Code (IMHO best tool for code writing).
 
 ## Linux
 ### Debian based (Ubuntu, KDE Neon and etc.)
 If you using Debian based system you want to install:
 ```
-apt install nasm bochs build-essential gcc-multilib g++-multilib
+apt install nasm bochs build-essential gcc-multilib g++-multilib git
 ```
 Optionaly you may need descent hex editor (wxHexEditor, Bless or Okteta)
 ### Other linux distros
@@ -24,6 +25,7 @@ You need to install following:
  - gcc and g++ with 32 bit target support;
  - make;
  - nasm;
+ - git;
  - any hex editor;
  - any code editor.
 # Notes
