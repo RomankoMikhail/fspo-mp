@@ -69,28 +69,28 @@ boot:   xor     eax, eax
 
 ; Инициализация VESA и GDT
         cli
-	xor     eax, eax
-	mov     fs, ax
-	mov     gs, ax
-	mov     ss, ax
-	mov     ds, ax
-	mov     es, ax
-	mov     sp, 0xfffc
+        xor     eax, eax
+        mov     fs, ax
+        mov     gs, ax
+        mov     ss, ax
+        mov     ds, ax
+        mov     es, ax
+        mov     sp, 0xfffc
 
         sti
-	call    initVesa
-	cli
+        call    initVesa
+        cli
 
-	lgdt    [gd_table]
+        lgdt    [gd_table]
 
-	mov     eax, cr0
-	or      eax, 1
-	mov     cr0, eax
+        mov     eax, cr0
+        or      eax, 1
+        mov     cr0, eax
         mov     ax, DATA_D      ; BUG #1
         mov     ds, ax          ; BUG #1
-	jmp     CODE_D:targetAddr
-	hlt
-	ret
+        jmp     CODE_D:targetAddr
+        hlt
+        ret
         
 
 ; Функции для чтения с диска и вывода на экран.
@@ -133,20 +133,6 @@ gd_table:
 
 CODE_D  equ     code_desc - gdt_begin
 DATA_D  equ     data_desc - gdt_begin
-
-initVesa:
-	mov     ax, 0x4f01
-	mov     cx, 0x118 ; 1024*768*24bit
-	mov     di, targetVideoTbl
-	int     0x10
-
-	mov     ax, 0x4f02
-	mov     bx, 0x4118
-	int     0x10
-	mov     eax, [targetVideoTbl + 0x28]
-	mov     dword[0x8000], eax
-	ret
-
 
 ; Дополняем файл до 512 байт
         times 510-$+$$ db 0
