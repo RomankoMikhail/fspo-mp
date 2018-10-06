@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>НАЧАЛО РАБОТЫ С BRACKETS</title>
+    <style>
+        body {}
+
+        table {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            border-collapse: collapse;
+        }
+
+        td {
+            border: 1px solid grey;
+            width: 32px;
+            height: 32px;
+        }
+
+        #output {
+            font-family: monospace;
+        }
+
+    </style>
+    <script>
+        /*eslint-env browser*/
+
+        var mode = 0;
+
+        function triggerMouseEvent(node, eventType) {
+            var clickEvent = document.createEvent('MouseEvents');
+            clickEvent.initEvent(eventType, true, true);
+            node.dispatchEvent(clickEvent);
+        }
+
+        function onMouseDown(e) {
+            if (e.which === 1) {
+                mode = 2;
+            } else {
+                mode = 1;
+            }
+            e = e || window.event;
+            var target = e.target || e.srcElement;
+            triggerMouseEvent(target, "mousemove");
+        }
+
+        function onMouseUp() {
+            mode = 0;
+        }
+
+        function createTable(element, width, height) {
+            if (element == null)
+                return;
+
+            for (var i = 0; i < height; i++) {
+                var row = element.insertRow(i);
+                for (var j = 0; j < width; j++) {
+                    row.insertCell(j);
+                }
+            }
+        }
+
+        function deleteTable(element) {
+            element.innerHTML = "";
+        }
+
+        function tableInit(element, func) {
+            if (element == null)
+                return;
+
+            element.onmousedown = onMouseDown;
+            element.onmouseup = onMouseUp;
+
+            for (var i = 0; i < element.rows.length; i++) {
+                for (var j = 0; j < element.rows[i].cells.length; j++) {
+                    element.rows[i].cells[j].myState = 0;
+
+                    element.rows[i].cells[j].onmousemove = function() {
+                        if (mode == 1) {
+                            this.style.backgroundColor = "#ffffff";
+                            this.myState = 0;
+                            func();
+                        } else if (mode == 2) {
+                            this.style.backgroundColor = "#000000";
+                            this.myState = 1;
+                            func();
+                        }
+                        
+
+                    };
+                    element.rows[i].cells[j].onmousedown = function() {
+                        if (mode == 1) {
+                            this.style.backgroundColor = "#ffffff";
+                            this.myState = false;
+                            func();
+                        } else if (mode == 2) {
+                            this.style.backgroundColor = "#000000";
+                            this.myState = true;
+                            func();
+                        }
+                        
+                    };
+                }
+            }
+        }
+
+    </script>
+    <script>
+        function pad(n, width, z) {
+            z = z || '0';
+            n = n + '';
+            return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+        }
+
+        function needUpdate() {
+            var table = document.querySelector("#tableID");
+            var out = document.querySelector("#output");
+            out.innerHTML = "";
+
+            for (var i = 0; i < table.rows.length; i++) {
+
+                for (var j = 0; j < table.rows[i].cells.length; j++) {
+                    out.innerHTML += table.rows[i].cells[j].myState;
+                }
+            }
+
+            var tmpString = out.innerHTML;
+            out.innerHTML = "";
+            for (var i = tmpString.length - 1; i >= 0; i--) {
+                out.innerHTML += tmpString[i];
+                if (i % 32 == 0 && i >= 1)
+                    out.innerHTML += " ";
+            }
+
+            var arrayOfStrings = out.innerHTML.split(' ');
+            out.innerHTML = "";
+            for (var i = arrayOfStrings.length - 1; i >= 0; i--) {
+                out.innerHTML += "0x";
+                out.innerHTML += pad(parseInt(arrayOfStrings[i], 2).toString(16), 8);
+                if(i >= 1)
+                    out.innerHTML += ", ";
+            }
+            //out.innerHTML = parseInt(out.innerHTML, 2).toString(16);
+        }
+
+        function tableUpdate() {
+            var table = document.querySelector("#tableID");
+            if (table == null) {
+                return;
+            }
+
+            var w = parseInt(document.querySelector("#width").value);
+            var h = parseInt(document.querySelector("#height").value);
+
+            deleteTable(table);
+            createTable(table, w, h);
+            tableInit(table, needUpdate);
+            table.addEventListener('contextmenu', event => event.preventDefault());
+        }
+
+    </script>
+</head>
+
+<body>
+    <a href="" target="_blank">Открыть в новой вкладке</a>
+    <h1>Редактор знака</h1>
+    <input type="number" id="width" min="0" value="8" /><br>
+    <input type="number" id="height" min="0" value="8" /><br>
+    <input type="button" value="Создать/обновить поле" onclick="tableUpdate()" /><br><br>
+
+    <table id="tableID">
+    </table>
+
+    <p id="output"></p>
+    <script>
+        tableUpdate();
+
+    </script>
+</body>
+
+</html>

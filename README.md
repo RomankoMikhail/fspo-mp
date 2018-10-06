@@ -1,4 +1,6 @@
 # fspo-mp
+# Warning!
+Makefile, run.cmd, run.sh and 'kernel' compilation not working propelry for now. Will be fixed later.
 
 # Tools
 ## Windows
@@ -43,3 +45,6 @@ You need to install following:
  ```
  display_library: win32, options="gui_debug"
  ```
+
+## Glyph creator
+There is Glyph creator placed in utils folder. It can be used to create glyph and make font for your project
