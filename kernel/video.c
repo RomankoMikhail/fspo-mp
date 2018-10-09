@@ -1,13 +1,11 @@
-#include <arch/monitor.h>
-#include <stdint.h>
-#include "abs.h"
-
-int monitor_color = 0;
-char *buffer;
+#include <system.h>
 
 #define bitRead(val, bit) ((val >> bit) & 1)
 #define bitSet(val, bit) (val | (1 << bit)
 #define bitClear(val, bit) (val & (~(1 << bit)))
+
+video_info_t info;
+uint32_t video_color;
 
 uint32_t font[] = {
 		0x00000000, 0x00000000, 0x00000000,
@@ -108,58 +106,19 @@ uint32_t font[] = {
 		0x00000000, 0x00000000, 0x00000000
 };
 
-void monitor_init() {
-	monitor_color = 0;
-	buffer = *(char**) (0x8000);
+void video_draw_pixel(int x, int y) {
+	int *p = (int*) (info.memory + (y * info.width + x) * (info.bpp >> 3));
+	*p = (video_color & 0x00ffffff) | (*p & 0xff000000);
 }
 
-void monitor_draw_pixel(int x, int y) {
-	int *p = (int*) (buffer + ((y * 1024) + x) * 3);
-	*p = (monitor_color & 0x00ffffff) | (*p & 0xff000000);
-}
-
-void monitor_draw_rect(int x, int y, int w, int h) {
-	int i, j;
-
-	for(j = y; j <= y + h; j++)
-	{
-		for(i = x; i <= x + w; i++)
-		{
-			monitor_draw_pixel(i, j);
-		}
-	}
-}
-
-int monitor_draw_font(int x, int y, int ch)
+void video_init(const video_info_t fbinfo)
 {
-	if(ch < ' ' || ch > '~')
-		return 0;
-
-	int i, j;
-	uint32_t *selected = &font[(ch - 0x20) * 3];
-
-	for(j = 0; j < 3; j++)
-	{
-		for(i = 0; i < 32; i++)
-		{
-			if(bitRead(selected[j], i))
-			{
-				int ix, iy;
-				ix = x + (i + j * 32) % 8;
-				iy = y + (i + j * 32) / 8;
-				monitor_draw_pixel(ix, iy);
-			}
-		}
-	}
-	return ch;
+    info = fbinfo;
+    video_draw_rect(0, 0, info.width, info.height, color(0, 0, 0));
 }
 
-void monitor_set_color(int color)
-{
-	monitor_color = color;
-}
-
-void drawLineLow(int x0, int y0, int x1, int y1) { //рисуем линию в низ влево
+void drawLineLow(	int x0, int y0,
+					int x1, int y1) { //рисуем линию в низ влево
 	int dx = x1 - x0;
 	int dy = y1 - y0;
 	int yi = 1;
@@ -172,7 +131,7 @@ void drawLineLow(int x0, int y0, int x1, int y1) { //рисуем линию в 
 	int x;
 
 	for (x = x0; x < x1; x++) { //рисуем линию в низ вправо
-		monitor_draw_pixel(x, y);
+		video_draw_pixel(x, y);
 		if (D > 0) {
 			y += yi;
 			D -= 2 * dx;
@@ -181,7 +140,8 @@ void drawLineLow(int x0, int y0, int x1, int y1) { //рисуем линию в 
 	}
 }
 
-void drawLineHigh(int x0, int y0, int x1, int y1) {
+void drawLineHigh(	int x0, int y0,
+					int x1, int y1) {
 	int dx = x1 - x0;
 	int dy = y1 - y0;
 	int xi = 1;
@@ -193,19 +153,21 @@ void drawLineHigh(int x0, int y0, int x1, int y1) {
 	int x = x0;
 	int y;
 	for (y = y0; y < y1; y++) {
-		monitor_draw_pixel(x, y);
+		video_draw_pixel(x, y);
 		if (D > 0) {
 			x += xi;
 			D -= 2 * dy;
 		}
 		D += 2 * dx;
 	}
-
 }
 
-
-void monitor_draw_line(int x1, int y1, int x2, int y2) {
-	if (absf(y2 - y1) < absf(x2 - x1)) {
+void video_draw_line(	int x1, int y1,
+						int x2, int y2,
+						uint32_t clr)
+{
+    video_color = clr;
+    if (_absi32(y2 - y1) < _absi32(x2 - x1)) {
 		if (x1 > x2) {
 			drawLineLow(x2, y2, x1, y1);
 		} else {
@@ -220,4 +182,47 @@ void monitor_draw_line(int x1, int y1, int x2, int y2) {
 	}
 }
 
+void video_draw_rect(	int x, int y, 
+						int w, int h,
+						uint32_t clr)
+{
+    int i, j;
+    video_color = clr;
+    for(j = y; j <= y + h; j++)
+	{
+		for(i = x; i <= x + w; i++)
+		{
+			video_draw_pixel(i, j);
+		}
+	}
+}
 
+int video_draw_font(int x, int y, 
+					int ch, uint32_t clr)
+{
+    if(ch < ' ' || ch > '~')
+		return 0;
+    video_color = clr;
+	int i, j;
+	uint32_t *selected = &font[(ch - 0x20) * 3];
+
+	for(j = 0; j < 3; j++)
+	{
+		for(i = 0; i < 32; i++)
+		{
+			if(bitRead(selected[j], i))
+			{
+				int ix, iy;
+				ix = x + (i + j * 32) % 8;
+				iy = y + (i + j * 32) / 8;
+				video_draw_pixel(ix, iy);
+			}
+		}
+	}
+	return ch;
+}
+
+uint32_t color(uint8_t red, uint8_t blue, uint8_t green)
+{
+    return ((uint32_t)red) << 16 | ((uint32_t)blue) << 8 | ((uint32_t)green);
+}

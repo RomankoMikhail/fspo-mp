@@ -20,9 +20,9 @@ C_OBJECTS = $(patsubst %.c, %.oc, $(C_FILES))
 ASM_OBJECTS = $(patsubst %.asm, %.oa, $(ASM_FILES))
 
 # Rules
-all: kernel.o
+all: BOOT.SYS
 
-kernel.o: $(C_OBJECTS) $(ASM_OBJECTS)
+BOOT.SYS: $(C_OBJECTS) $(ASM_OBJECTS)
 	 $(LD) -o $@ $^ $(LD_FLAGS)
 #	 cp $@ $@.bak
 	 strip -s $@

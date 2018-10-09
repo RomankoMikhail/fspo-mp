@@ -1,4 +1,4 @@
-#include "arch/serial.h"
+#include <system.h>
 
 void serial_init(enum serial_ports port)
 {
@@ -27,14 +27,14 @@ int serial_busy(enum serial_ports port)
 	return inb(port + 5) & 0x20;
 }
 
-void serial_write(enum serial_ports port, char a)
+void serial_write(enum serial_ports port, const char a)
 {
 	while (serial_busy(port) == 0);
 
 	outb(port, a);
 }
 
-void serial_puts(enum serial_ports port, char *str)
+void serial_puts(enum serial_ports port, const char *str)
 {
 	while(*str)
 	{

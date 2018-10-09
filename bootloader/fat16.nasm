@@ -9,15 +9,16 @@ entry:  jmp     short boot
         nop
 
 ; Резервируем место для заголовка FAT16
-        times   0x3B db 0
+        times   0x3B db 0x90
 
 ; Код загрузки первоначального файла 'ядра'
 ; Подготавливаем основную систему и сохраняем номер диска, с которого мы загрузились (BIOS передает его через dl).
-boot:   xor     eax, eax
+boot:   ;jmp     0x0000:0x7C43
+        xor     eax, eax
         mov     esi, eax
         mov     edi, eax
-        mov     ds, eax
-        mov     es, eax
+        mov     ds, ax
+        mov     es, ax
         mov     bp, 0x7C00
         mov     [bsDriveNumber], dl
 
@@ -50,14 +51,13 @@ boot:   xor     eax, eax
         dec     dx
         jnz     .next_sector
 
-        mov     si, mErr
-        call    printmsg
-        hlt
+        ;mov     si, mErr
+        ;call    printmsg
         jmp     $
 
 .done:
-        mov     si, mLoad
-        call    printmsg
+        ;mov     si, mLoad
+        ;call    printmsg
         add     di, 15
         mov     ax, [di]
         
@@ -68,17 +68,14 @@ boot:   xor     eax, eax
         jg      .loadfile
 
 ; Инициализация VESA и GDT
-        cli
         xor     eax, eax
         mov     fs, ax
         mov     gs, ax
         mov     ss, ax
-        mov     ds, ax
-        mov     es, ax
         mov     sp, 0xfffc
 
-        sti
         call    initVesa
+        ;call    do_e820
         cli
 
         lgdt    [gd_table]
@@ -88,9 +85,10 @@ boot:   xor     eax, eax
         mov     cr0, eax
         mov     ax, DATA_D      ; BUG #1
         mov     ds, ax          ; BUG #1
+        mov     es, ax          ; BUG?
+        mov     ss, ax          ; BUG?
         jmp     CODE_D:targetAddr
-        hlt
-        ret
+        jmp     $
         
 
 ; Функции для чтения с диска и вывода на экран.
@@ -101,11 +99,11 @@ rstart  dw      0x0000
 tclust  dw      0x0000
 
 ; Сообщение при загрузке необходимого файла
-mLoad   db  "LOADING... ", 0
+;mLoad   db  "LOADING... ", 0
 
 ; Сообщение при остуствии файла (отсутствие 0 в конце строки позволит вывести на экран имя необходимого файла)
-mErr    db  "NO "
-mFile   db  "BOOT    SYS", 0
+;mErr    db  "NO "
+mFile   db  "BOOT    SYS"
 
 gdt_begin:
 null_desc:
